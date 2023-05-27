@@ -2,17 +2,27 @@
 const express = require("express");
 //Make api requests, call server
 const app = express();
+const cors = require('cors');
+const pool = require('./db');
 
-const db = require("./models");
+//Middleware
+app.use(cors());
+app.use(express.json());
 
-//Routers
-const userRouter = require('./routes/Users');
-app.use("/users", userRouter);
+//Create a user
+app.post("/users", async(req,res) => {
+    try {
+        const { user } = req.body;
+        const newUser = await pool.query(
+            "INSERT INTO users (user) VALUES($1) RETURNING *", [user]
+        );
+        console.log(newUser);
+        res.json(newUser);
+    } catch (err) {
+        console.error(err.message);
+    }
+});
 
-//Uses sequelize to generate tables in database automatically upon startup
-db.sequelize.sync().then(() => {
-    //let instance of express listen to port 3001 and then console log the message
-    app.listen(3001, () => {
-        console.log("Server running on port 3001");
-    });
+app.listen(5000, () => {
+    console.log("App has started on port 5000");
 });
